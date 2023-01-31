@@ -140,3 +140,27 @@ class Passwords_Model:
         except Exception as e:
             print(e)
             return False
+
+    def delete_all_passwords(self, token):
+        try:
+            data = self.token_manage.check_token(token)
+            if data:
+
+                if id:
+                    params = tuple(str(data['id']))
+                else:
+                    print('Usuario nao informado!')
+                    return False
+
+                sql = 'DELETE FROM passwords WHERE user_id = %s'
+                self.cursor.execute(sql, params)
+                self.connection.commit()
+                return True
+
+            else:
+                print('Usuario não autenticado!')
+                return False
+
+        except Exception as e:
+            print(e)
+            return False

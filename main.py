@@ -63,10 +63,14 @@ def login_menu():
     print('[        FAZER LOGIN       ]\n\n')
     username = input('Login: ')
     password = getpass.getpass('Senha: ')
-    if username and password:
+    if all([username, password]):
         return username, password
-    else:
-        return False, False, False
+    op = input('Falha, informe valores validos!\n\nTentar novamente? (Padrão NÃO): ')
+    
+    if op in all_yes_variations:
+        login_menu()
+    
+    return None, None
 
 
 def main_menu():
@@ -93,7 +97,8 @@ def manage_passwords():
     print("1. Adicionar novo registro de senha")
     print("2. Remover registro de senha")
     print("3. Atualizar registro de senha")
-    print("4. Voltar")
+    print("4. Vizualizar registro de senha")
+    print("0. Voltar")
     return int(input("Opção: "))
 
 
@@ -128,6 +133,14 @@ def passwords_menu(current_name=None, current_login=None, current_password=None)
         return False, False, False
 
 
+def random_gen_menu():
+    size = int(input('Defina o tamanho da senha: ')) or 8
+    complex = int(input('Defina a comlpexidade da senha\n[0 - Baixa, 1 - Media, 2 - Forte]: ')) or 2
+    if size and complex:
+        return size, complex
+    return None, None
+
+
 if __name__ == '__main__':
     print('[        GERENCIADOR DE SENHAS       ]\n\n')
     try:
@@ -140,12 +153,11 @@ if __name__ == '__main__':
                 if option_start == 1:
                     # REALIZAR LOGIN
                     username, password = login_menu()
-                    if username and password:
-                        token, current_name, current_login = user.login(
-                            username, password)
+                    if all([username, password]):
+                        token, current_name, current_login = user.login(username, password)
                         if not token:
                             print('Falha na autenticação!')
-                        continue
+                    continue
 
                 elif option_start == 2:
                     # CRIAR NOVO USUARIO
@@ -231,16 +243,21 @@ if __name__ == '__main__':
                         confirm_op = input(
                             'Tem certeza que deseja excluir o usuario {}?\nSim ou Não (Padrão NÃO): '.format(current_name))
                         if confirm_op in all_yes_variations:
-                            if user.delete_user(token):
-                                print('Usuario apagado com sucesso!')
-                                user.logout()
-                                token = False
-                                continue
-                            else:
-                                print('Falha ao tentar excluir o usuario!')
-                                continue
+                            if passwords.delete_all_passwords(token):
+                                if user.delete_user(token):
+                                    print('Usuario excluido com sucesso!')
+                                    user.logout()
+                                    token = False
+                                    continue
+                            
+                            print('Falha ao tentar excluir o usuario!')
+                            continue
                         else:
                             continue
+                    elif user_data_option == 0:
+                        continue
+                    else:
+                        print('Opção Inválida!\nPor favor selecione uma opção valida:')
 
                 elif option == 2:
                     show_passwords(token)
@@ -259,16 +276,60 @@ if __name__ == '__main__':
                         continue
 
                     elif password_option == 2:
-                        # code for removing password
-
+                        pass_id = input('Informe o registro que deseja apagar: ')
+                        pass_id = int(pass_id)
+                        if pass_id:
+                            if passwords.delete_password(token, pass_id):
+                                print("Registro de senha removido com sucesso")
+                                continue
+                            print('Falha ao tentar remover o registro de senha {}!'.format(pass_id))
+                            continue
+                        print('Valor invalido!')
+                        continue
                         # <----- CRIAR DEPOIS A EXCLUSAO CORRETA DE USUARIO (ANTES DE EXCLUIR VERIFICAR SE EXISTEM SENHAS SALVAS, CASO SIM EXCLUIR TODAS PRIMEIRO)
                         # Criar tambem uma opção de geração automatica de senha na parte do registro de senha...
-                        print("Registro de senha removido com sucesso")
                     elif password_option == 3:
-                        # code for updating password
-                        print("Registro de senha atualizado com sucesso")
+                        pass_id = input('Informe o registro que deseja alterar: ')
+                        pass_id = int(pass_id)
+                        if pass_id:
+                            old_pass_name, old_pass_login, old_pass_password = passwords.read_password(token, pass_id)
+                            if all([old_pass_name, old_pass_login, old_pass_password]):
+                                new_pass_name, new_pass_login, new_pass_password = passwords_menu(old_pass_name, old_pass_login, old_pass_password)
+                                if all([new_pass_name, new_pass_login, new_pass_password]):
+                                    if passwords.update_password(token, new_pass_name, new_pass_login, new_pass_password):
+                                        print("Registro de senha atualizado com sucesso")
+                                        continue
+                                    print('Falha ao tentar remover o registro de senha {}!'.format(pass_id))
+                                    continue
+
+                        print('Valor invalido!')
+                        continue
+                    
+                    elif password_option == 4:
+                        #vizualizar senha
+                        pass_id = input('Informe o registro que deseja vizualizar: ')
+                        pass_id = int(pass_id)
+                        if pass_id:
+                            pass_name, pass_login, pass_password = passwords.read_password(token, pass_id)
+                            if all([pass_name, pass_login, pass_password]):
+                                print(" -----   {}   -----\nLogin: {}\nSenha: {}".format(pass_name, pass_login, pass_password))
+                                pass_name, pass_login, pass_password = None
+                                continue
+                            print('Falha ao tentar remover o registro de senha {}!'.format(pass_id))
+                            continue
+                        print('Valor invalido!')
+                        continue
+
+                    elif password_option == 0:
+                        continue
+                    else:
+                        print('Opção Inválida!\nPor favor selecione uma opção valida:')
+
                 elif option == 3:
-                    pass
+                    size, complexity = random_gen_menu()
+                    if size and complexity:
+                        print('Senha Gerada: {}'.format(passwords.random_generate(size, complexity)))
+                    continue
                 elif option == 0:
                     user.logout()
                     token = False
