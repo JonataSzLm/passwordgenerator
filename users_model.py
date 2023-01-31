@@ -53,8 +53,6 @@ class Users_Model:
             sql = 'INSERT INTO users (name, login, password) VALUES (%s, %s, %s)'
             self.cursor.execute(sql, params)
             self.connection.commit()
-            self.cursor.close()
-            self.connection.close()
             return True
 
         except Exception as e:
@@ -85,8 +83,6 @@ class Users_Model:
 
                 self.cursor.execute(sql, params)
                 self.connection.commit()
-                self.cursor.close()
-                self.connection.close()
                 return True
 
             else:
@@ -101,7 +97,7 @@ class Users_Model:
         try:
             data = self.token_manage.check_token(token)
             if data:
-                params = tuple(data['id'])
+                params = tuple(str(data['id']))
             else:
                 print('Token Invalido!')
                 return False
@@ -109,8 +105,6 @@ class Users_Model:
             sql = 'DELETE FROM users WHERE id = %s'
             self.cursor.execute(sql, params)
             self.connection.commit()
-            self.cursor.close()
-            self.connection.close()
             return True
 
         except Exception as e:

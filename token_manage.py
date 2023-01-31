@@ -7,7 +7,6 @@ from Crypto.Random import get_random_bytes
 class Token_Manage:
     def __init__(self):
         self.key = b'\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16'
-        self.iv = get_random_bytes(16)
         self.secretkey = 'S3cr3t#K3y'
 
     def create_token(self, result):
@@ -38,10 +37,11 @@ class Token_Manage:
 
     def encrypt_password(self, password):
         try:
-            cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
+            iv = get_random_bytes(16)
+            cipher = AES.new(self.key, AES.MODE_CBC, iv)
             padding = 16 - len(password) % 16
             password += chr(padding) * padding
-            ciphertext = cipher.encrypt(password.encode())
+            ciphertext = iv + cipher.encrypt(password.encode())
             return ciphertext
         except Exception as e:
             print(e)
@@ -49,7 +49,9 @@ class Token_Manage:
 
     def decrypt_password(self, ciphertext):
         try:
-            cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
+            iv = ciphertext[:16]
+            ciphertext = ciphertext[16:]
+            cipher = AES.new(self.key, AES.MODE_CBC, iv)
             password = cipher.decrypt(ciphertext).decode()
             padding = ord(password[-1])
             password = password[:-padding]

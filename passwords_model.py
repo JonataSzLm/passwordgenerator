@@ -72,15 +72,15 @@ class Passwords_Model:
             if data:
 
                 if id:
-                    params = tuple(id)
+                    params = (id, data['id'])
                 else:
                     print('Usuario nao informado!')
                     return False
 
-                sql = 'SELECT * FROM passwords WHERE id = %s'
+                sql = 'SELECT * FROM passwords WHERE id = %s AND user_id = %s'
                 self.cursor.execute(sql, params)
                 result = self.cursor.fetchone()
-                password = self.token_manage.decrypt_password(result[4])
+                password = self.token_manage.decrypt_password(bytes(result[4]))
                 return result[2], result[3], password
 
             else:
@@ -123,12 +123,12 @@ class Passwords_Model:
             if data:
 
                 if id:
-                    params = tuple(id)
+                    params = (id, data['id'])
                 else:
                     print('Usuario nao informado!')
                     return False
 
-                sql = 'DELETE FROM passwords WHERE id = %s'
+                sql = 'DELETE FROM passwords WHERE id = %s AND user_id = %s'
                 self.cursor.execute(sql, params)
                 self.connection.commit()
                 return True
